@@ -1,0 +1,7 @@
+﻿Done:
+1010 - sendMail.cs redesign to Email.cs
+1011 - telefonyDoAD -> PhoneWriterToAd
+1012 - rework of number redistribution and AdConnection
+
+ToDo:
+main exceptions redesign
