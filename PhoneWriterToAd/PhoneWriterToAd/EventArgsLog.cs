@@ -6,7 +6,7 @@ using System.Text;
 namespace telefonyDoAD
 {
     /// <summary>
-    /// EventArgsLog carry data from exceptions for Log purpose.
+    /// EventArgsLog carry string message for Log purpose.
     /// </summary>
     class EventArgsLog : EventArgs
     {

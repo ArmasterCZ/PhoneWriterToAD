@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Mail;
 using System.Text;
 using System.Configuration;
@@ -8,21 +6,12 @@ using System.Reflection;
 
 namespace telefonyDoAD
 {
+    /// <summary>
+    /// třída pro odeslání emailu
+    /// (old version)
+    /// </summary>
     public class Email
     {
-        /// <summary>
-        /// Class for sending Email.
-        /// Data needed for it take from App.onfig
-        /// </summary>
-        /// <param name="userData">Text in email body</param>
-
-
-        public Email(string userData)
-        {
-            loadMailData();
-            createMailBody(userData);
-        }
-
         protected string smtpHost = null;
         protected Nullable<int> smtpPort = null;
         protected string emailFrom = null;
@@ -32,11 +21,45 @@ namespace telefonyDoAD
         protected string emailHead = null;
         protected string emailBody = null;
 
+        /// <summary>
+        /// konstrukto při kterém se načtou informace z app.config a 
+        /// </summary>
+        /// <param name="userData">text v těle mailu</param>
+        public Email(string userData)
+        {
+            loadMailData();
+            createMailBody(userData);
+        }
+
+        /// <summary>
+        /// odešle email
+        /// </summary>
+        public void send()
+        {
+            // Command line argument must the the SMTP host.
+            SmtpClient client = new SmtpClient();
+            client.Port = smtpPort.Value;
+            client.Host = smtpHost;
+            client.EnableSsl = true;
+            client.Timeout = 10000;
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.UseDefaultCredentials = false;
+            client.Credentials = new System.Net.NetworkCredential(emailFrom, emailFromPassword);
+
+            MailMessage mm = new MailMessage(emailFromMasked, emailTo, emailHead, emailBody);
+            mm.BodyEncoding = UTF8Encoding.UTF8;
+            mm.DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure;
+
+            client.Send(mm);
+            Console.WriteLine("Email odeslán.");
+        }
+
+        /// <summary>
+        /// načte data z App.config
+        /// </summary>
         protected virtual void loadMailData()
         {
-            //load data from App.config
             //need reference system.configuration
-
             try
             {
                 smtpHost = ConfigurationManager.AppSettings["SmtpServerHost"];
@@ -64,6 +87,10 @@ namespace telefonyDoAD
             }
         }
 
+        /// <summary>
+        /// vytvoří tělo mailu
+        /// </summary>
+        /// <param name="userData"></param>
         protected virtual void createMailBody(string userData)
         {
             emailBody += $"{Environment.NewLine}Date   : {DateTime.Now}";
@@ -74,28 +101,11 @@ namespace telefonyDoAD
             emailBody += $"{Environment.NewLine}Data   : {userData}";
         }
 
-        public void send()
-        {
-            // Command line argument must the the SMTP host.
-            SmtpClient client = new SmtpClient();
-            client.Port = smtpPort.Value;
-            client.Host = smtpHost;
-            client.EnableSsl = true;
-            client.Timeout = 10000;
-            client.DeliveryMethod = SmtpDeliveryMethod.Network;
-            client.UseDefaultCredentials = false;
-            client.Credentials = new System.Net.NetworkCredential(emailFrom, emailFromPassword);
-
-            MailMessage mm = new MailMessage(emailFromMasked, emailTo, emailHead, emailBody);
-            mm.BodyEncoding = UTF8Encoding.UTF8;
-            mm.DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure;
-
-            client.Send(mm);
-            Console.WriteLine("Email odeslán.");
-        }
     }
 
-
+    /// <summary>
+    /// třída pro odesílání výpisu chyb a provedených operací
+    /// </summary>
     public class SendEmailError : Email
     {
         public SendEmailError(string userDataError, string userDataReport) : base(userDataError)
@@ -162,7 +172,9 @@ namespace telefonyDoAD
         }
     }
 
-
+    /// <summary>
+    /// třída pro odesílání výpisu provedených operací
+    /// </summary>
     public class SendEmailReport : Email
     {
         public SendEmailReport(string userData) : base(userData)

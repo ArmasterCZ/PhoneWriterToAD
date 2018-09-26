@@ -2,6 +2,7 @@
 1010 - sendMail.cs redesign to Email.cs
 1011 - telefonyDoAD -> PhoneWriterToAd
 1012 - rework of number redistribution and AdConnection
+1013 - cleanse, comments
 
 ToDo:
 main exceptions redesign

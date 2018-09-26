@@ -10,110 +10,10 @@ namespace telefonyDoAD
     /// </summary>
     class NumberRedistribution
     {
-        private List<AdUser> userListCSV = new List<AdUser>();
-        private List<AdUser> userListAd = new List<AdUser>();
-        private List<AdUser> userListFinal = new List<AdUser>();
-        public EventHandler<EventArgsLog> callBackEditLog;
-
-        private string addTelSpaces(string strTelephone)
-        {
-            string finalString = strTelephone;
-            if (strTelephone.Length > 3)
-            {
-                finalString = finalString.Insert(3, " ");
-            }
-            if (strTelephone.Length > 6)
-            {
-                finalString = finalString.Insert(7, " ");
-            }
-            return finalString;
-
-        }
-
-        /*public List<AdUser> getUserList()
-        {
-            return userListCSV;
-        }*/
-
-        private bool isUserInIgnored(AdUser user)
-        {
-            List<AdUser> adUserIngnoredList = new List<AdUser>() {
-            new AdUser { nameAcco = "testUser10" } ,
-            new AdUser { nameAcco = "testUser9" },
-            new AdUser { nameAcco = "testUser8" },
-            new AdUser { nameAcco = "testUser7" },
-            new AdUser { nameAcco = "testUser6" },
-            new AdUser { nameAcco = "testUser5" },
-            new AdUser { nameAcco = "testUser4" },
-            new AdUser { nameAcco = "testUser3" },
-            new AdUser { nameAcco = "testUser2" },
-            new AdUser { nameAcco = "testUser1" },
-            new AdUser { nameAcco = "ftester" }
-            };
-            AdUser userInList = adUserIngnoredList.Find(x => x.nameAcco.Equals(user.nameAcco));
-            if (userInList != null)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private AdUser redistributionBasedOnAd(AdUser adUser, AdUser csvUser)
-        {
-            //number redistribution based on information from AD
-            //can write tIpPhone
-            //cange "," in numbers to ";"
-
-            AdUser localUser = csvUser;
-            if ((localUser.tIpPhone.Equals("")) && (!adUser.tTelOthers.Equals("")))
-            {
-                //Console.WriteLine();
-                localUser.tIpPhone = adUser.tTelOthers;
-                localUser.telephoneLog += $"(4) číslo přesunuto z (static) otherTelephone do ipPhone. [{adUser.tTelOthers}];";
-            }
-
-            localUser.tTelOthers = localUser.tTelOthers.Replace(",", ";");
-            localUser.tMobOthers = localUser.tMobOthers.Replace(",", ";");
-            localUser.tIpPhoneOthers = localUser.tIpPhoneOthers.Replace(",", ";");
-            localUser.tHomePhoneOthers = localUser.tHomePhoneOthers.Replace(",", ";");
-
-            return localUser;
-        }
-
-        private AdUser redistributionNoInCsv(AdUser user)
-        {
-            //remove all telephone and check otherTelephone
-
-            if (!user.tIpPhone.Equals(user.tTelOthers))
-            {
-                user.tIpPhone = user.tTelOthers;
-                user.telephoneLog += $"(4) číslo přesunuto z (static) otherTelephone do ipPhone. [{user.tTelOthers}];";
-            }
-            else
-            {
-                user.tIpPhone = "";
-            }
-            user.tIpPhoneOthers = "";
-            user.tMob = "";
-            user.tMobOthers = "";
-            user.tHomePhone = "";
-            user.tHomePhoneOthers = "";
-            user.tTel = "";
-
-            return user;
-        }
-
-        private void editLog(string message)
-        {
-            //use callback to report log
-            if (callBackEditLog != null)
-            {
-                callBackEditLog(null, new EventArgsLog { strLog = message });
-            }
-        }
+        private List<AdUser> userListCSV = new List<AdUser>();        //list of CSV user
+        private List<AdUser> userListAd = new List<AdUser>();         //list of AD user
+        private List<AdUser> userListFinal = new List<AdUser>();      //final list of user with sorted attributes
+        public EventHandler<EventArgsLog> callBackEditLog;            //call back for changes
 
         public NumberRedistribution(List<AdUser> csv, List<AdUser> ad)
         {
@@ -121,6 +21,9 @@ namespace telefonyDoAD
             this.userListAd = ad;
         }
 
+        /// <summary>
+        /// redistribute number in userListCSV to atributes in userListCSV
+        /// </summary>
         public void processCsvToAtrib()
         {
 
@@ -181,10 +84,11 @@ namespace telefonyDoAD
             } //foreach user
         }
 
+        /// <summary>
+        /// compare local "UserListAd" with sended list "userListCSV" and create "userListFinal"
+        /// </summary>
         public void makeFinalList()
         {
-            //compare local "UserListAd" with sended list "listToCompare"
-
             foreach (AdUser user in userListAd)
             {
                 //search equalent in csv list
@@ -216,14 +120,20 @@ namespace telefonyDoAD
             }
         }
 
+        /// <summary>
+        /// return userListFinal
+        /// </summary>
         public List<AdUser> getFinalUserList()
         {
             return userListFinal;
         }
 
+        /// <summary>
+        /// return final diference between userListFinal and userListAd
+        /// </summary>
+        /// <returns>list of needed changes in AD</returns>
         public List<telephoneUser> getFinalDiferences()
         {
-            //return final diference between userListFinal and userListAd
             List<telephoneUser> finalList = new List<telephoneUser>();
 
             foreach (AdUser user in userListAd)
@@ -301,7 +211,7 @@ namespace telefonyDoAD
                     {
                         finalList.Add(diferenceUser);
                     }
-                    
+
                 }
 
             }
@@ -309,5 +219,118 @@ namespace telefonyDoAD
 
         }
 
+        /// <summary>
+        /// insert space in telephone number
+        /// </summary>
+        /// <param name="strTelephone">telephone number</param>
+        /// <returns>change input(823854870) to (823 854 870) </returns>
+        private string addTelSpaces(string strTelephone)
+        {
+            string finalString = strTelephone;
+            if (strTelephone.Length > 3)
+            {
+                finalString = finalString.Insert(3, " ");
+            }
+            if (strTelephone.Length > 6)
+            {
+                finalString = finalString.Insert(7, " ");
+            }
+            return finalString;
+
+        }
+
+        /// <summary>
+        /// check if user is in ignored list
+        /// </summary>
+        /// <param name="user">user to check</param>
+        /// <returns>is in ignored</returns>
+        private bool isUserInIgnored(AdUser user)
+        {
+            List<AdUser> adUserIngnoredList = new List<AdUser>() {
+            new AdUser { nameAcco = "testUser10" } ,
+            new AdUser { nameAcco = "testUser9" },
+            new AdUser { nameAcco = "testUser8" },
+            new AdUser { nameAcco = "testUser7" },
+            new AdUser { nameAcco = "testUser6" },
+            new AdUser { nameAcco = "testUser5" },
+            new AdUser { nameAcco = "testUser4" },
+            new AdUser { nameAcco = "testUser3" },
+            new AdUser { nameAcco = "testUser2" },
+            new AdUser { nameAcco = "testUser1" },
+            new AdUser { nameAcco = "ftester" }
+            };
+            AdUser userInList = adUserIngnoredList.Find(x => x.nameAcco.Equals(user.nameAcco));
+            if (userInList != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// number redistribution based on information from AD
+        /// can write tIpPhone and change "," in numbers to ";"
+        /// </summary>
+        /// <param name="adUser">CSV user</param>
+        /// <param name="csvUser">AD user</param>
+        /// <returns>user with redistributed numbers</returns>
+        private AdUser redistributionBasedOnAd(AdUser adUser, AdUser csvUser)
+        {
+            AdUser localUser = csvUser;
+            if ((localUser.tIpPhone.Equals("")) && (!adUser.tTelOthers.Equals("")))
+            {
+                //Console.WriteLine();
+                localUser.tIpPhone = adUser.tTelOthers;
+                localUser.telephoneLog += $"(4) číslo přesunuto z (static) otherTelephone do ipPhone. [{adUser.tTelOthers}];";
+            }
+
+            localUser.tTelOthers = localUser.tTelOthers.Replace(",", ";");
+            localUser.tMobOthers = localUser.tMobOthers.Replace(",", ";");
+            localUser.tIpPhoneOthers = localUser.tIpPhoneOthers.Replace(",", ";");
+            localUser.tHomePhoneOthers = localUser.tHomePhoneOthers.Replace(",", ";");
+
+            return localUser;
+        }
+
+        /// <summary>
+        /// redistribution for user existing only in AD
+        /// </summary>
+        /// <param name="user">user</param>
+        /// <returns>user with no telephone and check otherTelephone</returns>
+        private AdUser redistributionNoInCsv(AdUser user)
+        {
+            if (!user.tIpPhone.Equals(user.tTelOthers))
+            {
+                user.tIpPhone = user.tTelOthers;
+                user.telephoneLog += $"(4) číslo přesunuto z (static) otherTelephone do ipPhone. [{user.tTelOthers}];";
+            }
+            else
+            {
+                user.tIpPhone = "";
+            }
+            user.tIpPhoneOthers = "";
+            user.tMob = "";
+            user.tMobOthers = "";
+            user.tHomePhone = "";
+            user.tHomePhoneOthers = "";
+            user.tTel = "";
+
+            return user;
+        }
+
+        /// <summary>
+        /// use callback to report log
+        /// </summary>
+        /// <param name="message">message</param>
+        private void editLog(string message)
+        {
+            if (callBackEditLog != null)
+            {
+                callBackEditLog(null, new EventArgsLog { strLog = message });
+            }
+        }
     }
 }

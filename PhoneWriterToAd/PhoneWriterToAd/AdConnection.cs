@@ -8,15 +8,14 @@ using System.DirectoryServices.AccountManagement;
 
 namespace telefonyDoAD
 {
+    /// <summary>
+    /// (AN) get all user from AD or to write changes from List (telephoneUser).
+    /// </summary>
     class AdConnection
     {
-        /// <summary>
-        /// get all user from AD or to write changes from List (telephoneUser).
-        /// </summary>
-
-        public EventHandler<EventArgsLog> callBackErrorLog;
-        public EventHandler<EventArgsLog> callBackEditLog;
-        public List<AdUser> userListAd { get; private set; } = new List<AdUser>();
+        public EventHandler<EventArgsLog> callBackErrorLog;                         //call back for errors
+        public EventHandler<EventArgsLog> callBackEditLog;                          //call back for changes
+        public List<AdUser> userListAd { get; private set; } = new List<AdUser>();  //loaded users from AD
 
         public AdConnection(EventHandler<EventArgsLog> errorCallBack, EventHandler<EventArgsLog> editCallBack)
         {
@@ -27,20 +26,22 @@ namespace telefonyDoAD
             loadUserListAd();
         }
 
-        //public AdConnection(List<AdUser> csvList, EventHandler<EventArgsLog> errorCallBack, EventHandler<EventArgsLog> editCallBack, bool showOnly)
-        //{
-        //    //set callbacks
-        //    callBackErrorLog = errorCallBack;
-        //    callBackEditLog = editCallBack;
-        //    //load user from AD
-        //    loadUserListAd();
-        //    //write changes to user in AD
-        //    writeDiferencesToAd(csvList, showOnly);
-        //}
+        public AdConnection(List<AdUser> csvList, EventHandler<EventArgsLog> errorCallBack, EventHandler<EventArgsLog> editCallBack, bool showOnly)
+        {
+            //set callbacks
+            callBackErrorLog = errorCallBack;
+            callBackEditLog = editCallBack;
+            //load user from AD
+            loadUserListAd();
+            //write changes to user in AD
+            writeDiferencesToAd(csvList, showOnly);
+        }
 
+        /// <summary>
+        /// load all user from AD to local list
+        /// </summary>
         public void loadUserListAd()
         {
-            //load all user from AD to local list
             userListAd = new List<AdUser>();
             using (var context = new PrincipalContext(ContextType.Domain, "sitel.cz"))
             {
@@ -79,10 +80,13 @@ namespace telefonyDoAD
 
         }
 
+        /// <summary>
+        /// compare local "UserListAd" with sended list "listToCompare" and write diferences (local == From, sended == For)
+        /// </summary>
+        /// <param name="listToCompare">list to compare</param>
+        /// <param name="showOnly">no changes in AD</param>
         public void writeDiferencesToAd(List<AdUser> listToCompare, bool showOnly)
         {
-            //compare local "UserListAd" with sended list "listToCompare" and write diferences (local == From, sended == For)
-
             List<string> adUserFindedByCsv = new List<string>();
             List<string> adUserDefault = new List<string>();
             List<string> adUserIgnored = new List<string>();
@@ -154,6 +158,40 @@ namespace telefonyDoAD
 
         }
 
+        /// <summary>
+        /// write changes to AD
+        /// </summary>
+        /// <param name="telephoneUserList">list of changes</param>
+        public void writeChangesToAD(List<telephoneUser> telephoneUserList)
+        {
+            foreach (telephoneUser telephoneUser in telephoneUserList)
+            {
+                //write changes to AD
+                if (telephoneUser.attributes.Count() > 0)
+                {
+                    string nameAcco = telephoneUser.accountName;
+
+                    try
+                    {
+                        editUserInAd(nameAcco, telephoneUser.attributes.ToArray(), telephoneUser.attribData.ToArray());
+                        editLog($"    -(Uživatel upraven {nameAcco})");
+                    }
+                    catch (Exception ex)
+                    {
+                        errorLog($"Exception AdConnection:\n\n {ex.ToString()}");
+                    }
+
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// edit attributes in AD for single user
+        /// </summary>
+        /// <param name="userName">user name</param>
+        /// <param name="parameters">array of attributes</param>
+        /// <param name="newAtrValues">array of new values ot these atributes</param>
         private void editUserInAd(string userName, string[] parameters, string[] newAtrValues)
         {
             //edit single atribute for single user
@@ -244,56 +282,46 @@ namespace telefonyDoAD
             }
         }
 
+        /// <summary>
+        /// erase all telephone data from AD user
+        /// </summary>
+        /// <param name="userName">user name</param>
         private void clearUserTelephonesInAd (string userName)
         {
-            //remove telephones data from user
             string[] parameters = new string[] { "homePhone", "otherHomePhone", "ipPhone", "otherIpPhone", "Mobile", "otherMobile", "TelephoneNumber", "otherTelephone" };
             string[] newAtrValues = new string[] { "", "", "", "", "", "", "", "" };
             editUserInAd(userName, parameters, newAtrValues);
     }
 
+        /// <summary>
+        /// use callback to report errors
+        /// </summary>
+        /// <param name="message">message</param>
         private void errorLog(string message)
         {
-            //use callback to report errors
             if (callBackErrorLog != null)
             {
                 callBackErrorLog(null, new EventArgsLog { strLog = message });
             }
         }
 
+        /// <summary>
+        /// use callback to report logs
+        /// </summary>
+        /// <param name="message">message</param>
         private void editLog(string message)
         {
-            //use callback to report logs
             if (callBackEditLog != null)
             {
                 callBackEditLog(null, new EventArgsLog { strLog = message });
             }
         }
 
-        public void writeChangesToAD(List<telephoneUser> telephoneUserList)
-        {
-            foreach (telephoneUser telephoneUser in telephoneUserList)
-            {
-                //write changes to AD
-                if (telephoneUser.attributes.Count() > 0)
-                {
-                    string nameAcco = telephoneUser.accountName;
-
-                    try
-                    {
-                        editUserInAd(nameAcco, telephoneUser.attributes.ToArray(), telephoneUser.attribData.ToArray());
-                        editLog($"    -(Uživatel upraven {nameAcco})");
-                    }
-                    catch (Exception ex)
-                    {
-                        errorLog($"Exception AdConnection:\n\n {ex.ToString()}");
-                    }
-
-                }
-            }
-
-        }
-
+        /// <summary>
+        /// check if user is in ignored list
+        /// </summary>
+        /// <param name="user">user</param>
+        /// <returns></returns>
         private bool isUserInIgnored(AdUser user)
         {
             List<AdUser> adUserIngnoredList = new List<AdUser>() {
@@ -320,12 +348,16 @@ namespace telefonyDoAD
             }
         }
 
+        /// <summary>
+        /// number redistribution based on information from AD
+        /// can write tIpPhone
+        /// change "," in numbers to ";"
+        /// </summary>
+        /// <param name="adUser"></param>
+        /// <param name="csvUser"></param>
+        /// <returns></returns>
         private AdUser lastRedistribution(AdUser adUser, AdUser csvUser)
         {
-            //number redistribution based on information from AD
-            //can write tIpPhone
-            //cange "," in numbers to ";"
-
             AdUser localUser = csvUser;
             if ((localUser.tIpPhone.Equals("")) && (!adUser.tTelOthers.Equals("")))
             {
@@ -342,9 +374,14 @@ namespace telefonyDoAD
             return localUser;
         }
 
+        /// <summary>
+        /// return 2 List with data to change. 
+        /// </summary>
+        /// <param name="user">user list</param>
+        /// <param name="userInCsv">CSV user list</param>
+        /// <returns>[0] == List<string> attributes, [1] == List<string> attribData</returns>
         private List<List<string>> markDiferencesAgainCsv(AdUser user, AdUser userInCsv)
         {
-            //return 2 List with data to change. [0] == List<string> attributes, [1] == List<string> attribData
             List<List<string>> finalList = new List<List<string>>();
             List<string> attributes = new List<string>();
             List<string> attribData = new List<string>();
@@ -407,9 +444,13 @@ namespace telefonyDoAD
             return finalList;
         }
 
+        /// <summary>
+        /// return 2 List with data to change. 
+        /// </summary>
+        /// <param name="user">user</param>
+        /// <returns>[0] == List<string> attributes, [1] == List<string> attribData</returns>
         private List<List<string>> markDiferencesDefault(AdUser user)
         {
-            //return 2 List with data to change. [0] == List<string> attributes, [1] == List<string> attribData
             List<List<string>> finalList = new List<List<string>>();
             List<string> attributes = new List<string>();
             List<string> attribData = new List<string>();
@@ -466,7 +507,9 @@ namespace telefonyDoAD
             return finalList;
         }
 
-        /*
+
+        #region NotUsed
+
         private void editUserOneInAd(string userName, string parameter, string newValue)
         {
             //edit single atribute for single user
@@ -538,96 +581,7 @@ namespace telefonyDoAD
             string[] newValues = { "descr item8", "" };
             editUserInAd(userName2, parameters, newValues);
         }
-        /**/
 
-        /* functional load of AD user/s
-        private static List<AdUser> getAllAdUser()
-        {
-            List<AdUser> UserListAd = new List<AdUser>();
-            using (var context = new PrincipalContext(ContextType.Domain, "sitel.cz"))
-            {
-                using (var searcher = new PrincipalSearcher(new UserPrincipal(context)))
-                {
-                    foreach (var result in searcher.FindAll())
-                    {
-                        AdUser localAdUser = new AdUser();
-
-                        DirectoryEntry de = result.GetUnderlyingObject() as DirectoryEntry;
-                        if (de.Properties["samAccountName"].Value.ToString() != null)
-                        {
-                            localAdUser.nameGiven       = "" + de.Properties["givenName"].Value;
-                            localAdUser.nameSurn        = "" + de.Properties["sn"].Value;
-                            localAdUser.nameAcco        = "" + de.Properties["samAccountName"].Value;
-                            localAdUser.nameFull        = "" + de.Properties["userPrincipalName"].Value;
-                            localAdUser.tHomePhone      = "" + de.Properties["homePhone"].Value;
-                            localAdUser.tHomePhoneOthers= "" + de.Properties["otherHomePhone"].Value;
-                            localAdUser.tIpPhone        = "" + de.Properties["ipPhone"].Value;
-                            localAdUser.tIpPhoneOthers  = "" + de.Properties["otherIpPhone"].Value;
-                            localAdUser.tMob            = "" + de.Properties["Mobile"].Value;
-                            localAdUser.tMobOthers      = "" + de.Properties["otherMobile"].Value;
-                            localAdUser.tTel            = "" + de.Properties["TelephoneNumber"].Value;
-                            localAdUser.tTelOthers      = "" + de.Properties["otherTelephone"].Value;
-                        }
-                        else
-                        {
-                            Exception exc = new Exception("Error in load users from AD. Foud user with no account name. Loading Closed.");
-                            throw exc;
-                        }
-
-
-                        userListAd.Add(localAdUser);
-                    }
-                }
-            }
-            return userListAd;
-        }
-
-        private static void getOneAdUser()
-        {
-            string searchedUser = "testUser10";
-            using (var context = new PrincipalContext(ContextType.Domain, "sitel.cz"))
-            {
-                using (var user = UserPrincipal.FindByIdentity(context, IdentityType.Name, searchedUser))
-                {
-                    //user.SamAccountName = "SamAccountName";
-                    //user.UserPrincipalName = "UserPrincipalName";
-                    //user.Surname = "Surname";
-                    //user.GivenName = "GivenName";
-                    //user.MiddleName = "MiddleName";
-                    //user.DisplayName = "DisplayName";
-                    //user.EmailAddress = "EmailAddress";
-                    //user.Save();
-                }
-            }
-        }
-
-        private static void readAllAdUser()
-        {
-            using (var context = new PrincipalContext(ContextType.Domain, "sitel.cz"))
-            {
-                using (var searcher = new PrincipalSearcher(new UserPrincipal(context)))
-                {
-                    foreach (var result in searcher.FindAll())
-                    {
-                        DirectoryEntry de = result.GetUnderlyingObject() as DirectoryEntry;
-                        Console.WriteLine("First Name         : " + de.Properties["givenName"].Value);
-                        Console.WriteLine("Last Name          : " + de.Properties["sn"].Value);
-                        Console.WriteLine("SAM account name   : " + de.Properties["samAccountName"].Value);
-                        Console.WriteLine("User principal name: " + de.Properties["userPrincipalName"].Value);
-                        Console.WriteLine("homePhone          : " + de.Properties["homePhone"].Value);
-                        Console.WriteLine("otherHomePhone     : " + de.Properties["otherHomePhone"].Value);
-                        Console.WriteLine("ipPhone            : " + de.Properties["ipPhone"].Value);
-                        Console.WriteLine("otherIpPhone       : " + de.Properties["otherIpPhone"].Value);
-                        Console.WriteLine("Mobile             : " + de.Properties["Mobile"].Value);
-                        Console.WriteLine("otherMobile        : " + de.Properties["otherMobile"].Value);
-                        Console.WriteLine("TelephoneNumber    : " + de.Properties["TelephoneNumber"].Value);
-                        Console.WriteLine("otherTelephone     : " + de.Properties["otherTelephone"].Value);
-                    }
-                }
-            }
-            Console.ReadLine();
-
-        }*/
-
+        #endregion NotUsed
     }
 }

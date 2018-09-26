@@ -1,26 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace telefonyDoAD
 {
     /// <summary>
-    /// telephoneUser store final changes. For rewrite data in AD.
+    /// store final changes. For rewrite data in AD.
     /// "attributes" store AD names of atributes to change. (in same order as attribData)
     /// "attribData" store data for these attributes.
     /// </summary>
     class telephoneUser
     {
-        public string accountName { get; set; } = "";
-        public List<string> attributes { get; set; } = new List<string>();
-        public List<string> attribData { get; set; } = new List<string>();
+        public string accountName { get; set; } = "";                       //user name
+        public List<string> attributes { get; set; } = new List<string>();  //list of atributes
+        public List<string> attribData { get; set; } = new List<string>();  //list of new values of that atributes
 
         public telephoneUser(string accountName)
         {
             this.accountName = accountName;
         }
 
+        /// <summary>
+        /// check if user have any stored changes
+        /// </summary>
         public bool haveChanges()
         {
             if (attributes.Count() > 0)

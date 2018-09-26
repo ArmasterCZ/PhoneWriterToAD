@@ -1,0 +1,7 @@
+C:\Users\Armaster\Documents\GitHub\PhoneWriterToAD\PhoneWriterToAd\PhoneWriterToAd\bin\Debug\PhoneWriterToAd.exe.config
+C:\Users\Armaster\Documents\GitHub\PhoneWriterToAD\PhoneWriterToAd\PhoneWriterToAd\bin\Debug\PhoneWriterToAd.exe
+C:\Users\Armaster\Documents\GitHub\PhoneWriterToAD\PhoneWriterToAd\PhoneWriterToAd\bin\Debug\PhoneWriterToAd.pdb
+C:\Users\Armaster\Documents\GitHub\PhoneWriterToAD\PhoneWriterToAd\PhoneWriterToAd\obj\Debug\PhoneWriterToAd.csprojAssemblyReference.cache
+C:\Users\Armaster\Documents\GitHub\PhoneWriterToAD\PhoneWriterToAd\PhoneWriterToAd\obj\Debug\PhoneWriterToAd.csproj.CoreCompileInputs.cache
+C:\Users\Armaster\Documents\GitHub\PhoneWriterToAD\PhoneWriterToAd\PhoneWriterToAd\obj\Debug\PhoneWriterToAd.exe
+C:\Users\Armaster\Documents\GitHub\PhoneWriterToAD\PhoneWriterToAd\PhoneWriterToAd\obj\Debug\PhoneWriterToAd.pdb
