@@ -26,3 +26,4 @@ Skládá z:
 
 `Špatně využitá technologie:`
 - skladování a práce s daty v AdUser.cs
+- rozvržení kódu v třídě Program/Main
